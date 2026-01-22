@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var manager: DocumentManager
+    @EnvironmentObject var viewModel: EditorViewModel
 
     var body: some View {
         NavigationSplitView {
@@ -24,14 +25,10 @@ struct ContentView: View {
                     ToolbarItemGroup(placement: .primaryAction) {
                         Button("New", action: manager.createDocument)
                             .keyboardShortcut("N", modifiers: .command)
-                        Button("Save") {
-                            manager.selectedDocument.map(manager.save)
-                        }
-                        .keyboardShortcut("S", modifiers: .command)
-                        Button("Delete", role: .destructive) {
-                            manager.selectedDocument.map(manager.delete)
-                        }
-                        .keyboardShortcut(.delete)
+                        Button("Save") { manager.selectedDocument.map(manager.save) }
+                            .keyboardShortcut("S", modifiers: .command)
+                        Button("Delete", role: .destructive) { manager.selectedDocument.map(manager.delete) }
+                            .keyboardShortcut(.delete)
                     }
                 }
             } else {
@@ -39,5 +36,7 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .navigationSplitViewStyle(.automatic)
+        .navigationSplitViewColumnWidth(min: 250, ideal: 300)
     }
 }

@@ -4,44 +4,88 @@ import SwiftUI
 struct SidebarView: View {
     @EnvironmentObject var manager: DocumentManager
     @EnvironmentObject var viewModel: EditorViewModel
-    @State private var showAccordion = true
+
+    @State private var showStyleButtons = true
+    @State private var showDocsList     = true
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Picker("Font Style", selection: $viewModel.currentStyle) {
+        VStack(alignment: .leading, spacing: 12) {
+            // ─── Font‐Style “Dropdown” ───
+            Menu {
                 ForEach(FontStyle.allCases) { style in
-                    Text(style.rawValue).tag(style)
-                }
-            }
-            .pickerStyle(MenuPickerStyle())
-            .padding([.top, .horizontal])
-            .onChange(of: viewModel.currentStyle) { style in
-                viewModel.convertSelection.send(style)
-            }
-
-            DisclosureGroup("Convert Selection", isExpanded: $showAccordion) {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(FontStyle.allCases) { style in
-                        Button(style.rawValue) {
-                            viewModel.convertSelection.send(style)
-                        }
-                        .buttonStyle(.bordered)
+                    Button(style.rawValue) {
+                        viewModel.currentStyle = style
+                        viewModel.convertSelection.send(style)
                     }
                 }
-                .padding(.vertical, 4)
-                .frame(maxHeight: 300)
+            } label: {
+                Text(viewModel.currentStyle.rawValue)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
             }
+            .menuStyle(BorderlessButtonMenuStyle())
             .padding(.horizontal)
 
-            List(selection: Binding(
-                get: { manager.selectedDocument },
-                set: { manager.selectedDocument = $0 }
-            )) {
-                ForEach(manager.documents) { doc in
-                    Text(doc.name)
+            // ─── Style Buttons Accordion Toggle ───
+            HStack {
+                Button(action: { showStyleButtons.toggle() }) {
+                    Image(systemName: showStyleButtons ? "chevron.down" : "chevron.right")
                 }
+                .buttonStyle(PlainButtonStyle())
+
+                Spacer()
             }
-            .listStyle(.sidebar)
+            .padding(.horizontal, 4)
+
+            if showStyleButtons {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(FontStyle.allCases) { style in
+                            Button(action: {
+                                viewModel.convertSelection.send(style)
+                            }) {
+                                Text(style.rawValue)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .frame(maxHeight: 300)
+            }
+
+            // ─── Documents Accordion Toggle with Label ───
+            HStack {
+                Button(action: { showDocsList.toggle() }) {
+                    Image(systemName: showDocsList ? "chevron.down" : "chevron.right")
+                }
+                .buttonStyle(PlainButtonStyle())
+
+                Text("📑 .txt 📄")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 4)
+
+            if showDocsList {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(manager.documents) { doc in
+                            Text(doc.name)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .frame(maxHeight: 300)
+            }
+
+            Spacer()
         }
+        .padding(5) // 5px padding around all controls
     }
 }
